@@ -1,9 +1,10 @@
 #importation
 from csv import *
-import json
+from json import *
 import xml.etree.ElementTree as et
 import yaml
 import xmltodict
+import dict2xml
 #Fontion Menu
 def Menu(verif):
     verif = verif.lower()
@@ -32,6 +33,7 @@ def recupFichier(fichiers):
     return fichiers[-1]
 #Transform File to Dic
 def transformDict(fichiers):
+    count = 0
     dictfile=[]
     extension = fichiers.split('.')
     extension = extension[-1]
@@ -39,13 +41,19 @@ def transformDict(fichiers):
         extension = 'yaml'
     if extension == 'json':
         with open(fichiers, 'r') as my_file:
-            data = json.load(my_file)
-            dictfile = json.dumps(data)
+            data = load(my_file)
+            dictfile.append(data)
     elif extension == 'csv':
         with open(fichiers, 'r') as my_file:
-            data = DictReader(my_file, delimiter = ';')
+            data = csv.reader(my_file)#(), delimiter = ';')
             for row in data:
-                dictfile.append(row)
+                if count == 0:
+                    dictionfinale = row
+                else:
+                    verifier = dict(zip(dictionfinale, row))
+                    dictfile.append(verifier)
+                count += 1
+                #dictfile.append(row)
     elif extension == 'yaml':
         with open(fichiers, 'r') as my_file:
             dictfile = yaml.safe_load(my_file)
@@ -55,15 +63,20 @@ def transformDict(fichiers):
     return dictfile
 #Transform Dic to File
 def transformToFile(choix,dictfile):
+    liste = []
     if choix == 'json':
         with open('new.json', 'w') as y:
-            json.dump(dictfile, y)
+            dump(dictfile, y)
         return ("Votre fichier",choix,"a été créé")
     if choix == 'csv':
-        with open('new.csv', 'w') as f:  
-            writer = csv.writer(f)
-            #for k, v in dictfile.items():
-            writer.writerow(dictfile)
+        for i in range(len(dictfile)):
+            elm=dictfile[i]
+            keys=list(elm.keys())
+        with open("mynewfile.csv","w") as csv_out:
+            writer=DictWriter(csv_out,fieldnames=keys)
+            writer.writeheader()
+            for data in dictfile:
+                writer.writerow(data)
         return ("Votre fichier",choix,"a été créé")
     if choix == 'yaml':
         with open('new.yaml', 'a') as f:  
@@ -71,6 +84,6 @@ def transformToFile(choix,dictfile):
         return ("Votre fichier",choix,"a été créé")
     if choix == 'xml':
         with open('new.xml', 'w') as y:
-            json.dump(dictfile, y)
+            contenu = dict2xml.dict2xml(dictfile)
+            y.write(contenu)
         return ("Votre fichier",choix,"a été créé")
-#
